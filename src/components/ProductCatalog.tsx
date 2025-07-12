@@ -1,21 +1,71 @@
+'use client'
+
+import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { productData } from "@/lib/product-data";
+import { productService, Product } from "@/lib/supabase";
 import { normalizeSlug } from "@/lib/utils";
 
 const ProductCatalog = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          productService.getAllProducts(),
+          productService.getAllCategories()
+        ]);
+        
+        setProducts(productsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   // Group products by category
-  const productsByCategory = Object.entries(productData).reduce((acc, [slug, product]) => {
+  const productsByCategory = products.reduce((acc, product) => {
     const category = product.category;
     if (!acc[category]) {
       acc[category] = [];
     }
-    acc[category].push(slug);
+    acc[category].push(product);
     return acc;
-  }, {} as Record<string, string[]>);
+  }, {} as Record<string, Product[]>);
 
-  // Define category display names and order
-  const categoryConfig = Object.keys(productsByCategory);
+  if (loading) {
+    return (
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Katalog Produk Lengkap
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Memuat produk...
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
+                <div className="h-48 bg-muted rounded-lg mb-4"></div>
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-background">
@@ -29,9 +79,9 @@ const ProductCatalog = () => {
           </p>
         </div>
 
-        <Tabs defaultValue={normalizeSlug(categoryConfig[0])} className="w-full">
+        <Tabs defaultValue={normalizeSlug(categories[0] || '')} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
-            {categoryConfig.map((category) => (
+            {categories.map((category) => (
               <TabsTrigger 
                 key={category} 
                 value={normalizeSlug(category)} 
@@ -44,7 +94,7 @@ const ProductCatalog = () => {
             ))}
           </TabsList>
 
-          {categoryConfig.map((category) => {
+          {categories.map((category) => {
             const gridClass = 
               category === "SAND BLAST" ? "grid md:grid-cols-2 lg:grid-cols-4 gap-6" :
               category === "KACA FILM" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-6" :
@@ -53,8 +103,8 @@ const ProductCatalog = () => {
             return (
               <TabsContent key={category} value={normalizeSlug(category)}>
                 <div className={gridClass}>
-                  {productsByCategory[category]?.map((slug) => (
-                    <ProductCard key={slug} slug={slug} />
+                  {productsByCategory[category]?.map((product) => (
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
               </TabsContent>

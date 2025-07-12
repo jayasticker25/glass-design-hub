@@ -7,24 +7,19 @@ import { Check, MessageCircle, Eye } from "lucide-react";
 import Link from "next/link";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import QuoteRequestButton from "@/components/QuoteRequestButton";
-import { normalizeSlug } from "@/lib/utils";
-import { productData } from "@/lib/product-data";
+import { Product } from "@/lib/supabase";
 
 interface ProductCardProps {
-  slug: string;
+  product: Product;
 }
 
-const ProductCard = ({ slug }: ProductCardProps) => {
-  const product = productData[slug];
-  
-  if (!product) return null;
-
+const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden">
       {/* Product Image */}
       <div className="relative h-48 overflow-hidden">
         <img 
-          src={product.imageUrl} 
+          src={product.image_url} 
           alt={product.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -61,7 +56,7 @@ const ProductCard = ({ slug }: ProductCardProps) => {
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
             <Button size="sm" className="flex-1" variant="outline" asChild>
-              <Link href={`/product/${slug}`}>
+              <Link href={`/product/${product.slug}`}>
                 <Eye className="h-4 w-4 mr-1" />
                 Detail
               </Link>

@@ -39,6 +39,9 @@ export async function generateMetadata({ params }: ProductDetailProps): Promise<
       images: [product.image_url],
       url: canonicalUrl,
     },
+    other: {
+      'structured-data': JSON.stringify(product.seo_structured_data || {})
+    }
   };
 }
 
@@ -157,6 +160,19 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
           </div>
         )}
       </div>
+
+      {/* Structured Data */}
+      {product.seo_structured_data && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              ...product.seo_structured_data
+            })
+          }}
+        />
+      )}
 
       <Footer />
     </div>
